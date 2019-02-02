@@ -34,7 +34,7 @@ as external Arduino.
 
 # Hardware
 
-Schematics and PCB can be found [here][https://easyeda.com/editor#id=1c84f9033af4487bb82d24a9e845125c|2ef221c521474696ba044a7bebf7602c].
+Schematics and PCB can be found [here](https://easyeda.com/editor#id=1c84f9033af4487bb82d24a9e845125c|2ef221c521474696ba044a7bebf7602c).
 
 BOM:
 - TBD (look at the easyeda project)
@@ -49,3 +49,4 @@ sudo apt-get install cmake g++ wiringpi
 ```
 
 Building
+TBD
