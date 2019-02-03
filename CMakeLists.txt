@@ -3,6 +3,10 @@ project (NanoDlpShield)
 
 find_library(wiringPi_LIB wiringPi)
 
-set(SOURCES test.cpp HostPty.cpp)
+set(SOURCES
+    test.cpp 
+    HostPty.cpp
+    SpeedyStepper.cpp
+    )
 add_executable(NanoDlpShield ${SOURCES})
 target_link_libraries(NanoDlpShield ${wiringPi_LIB} util)
