@@ -7,9 +7,8 @@
 
 using namespace std;
 
-HostPty::HostPty(const string & HostPty_name)
-    : _buf_ptr(0)
-    , _contents_size(0)
+HostPty::HostPty(const string & pty_name)
+    : _pty_name(pty_name)
 {
     char name[100] = {0};
     int res = openpty(&_master, &_slave, name, NULL, NULL);
@@ -19,36 +18,28 @@ HostPty::HostPty(const string & HostPty_name)
     if(res != 0)
         throw std::runtime_error("Cannot open HostPty");
 
-    // TODO: make a symlink here
+    // TODO: Symlink creation and usage requires root rights. Find a proper way for this
+    //unlink(pty_name.c_str());
+    //res = symlink(name, pty_name.c_str());
+    //if(res < 0)
+    //    throw std::runtime_error("Cannot create pty symlink");
 }
 
 HostPty::~HostPty()
 {
+    //unlink(_pty_name.c_str());
     close(_master);
     close(_slave);
 }
 
 string HostPty::nextString()
 {
-    while(1)
+    static const int BUF_SIZE = 4096;
+    char buf[BUF_SIZE];
+    size_t idx = 0;
+
+    while(true)
     {
-        // Search for the next complete string in a buffer
-        for(size_t idx = _buf_ptr; idx <  _contents_size; idx++)
-        {
-            // Found a string
-            if(_buf[idx] == '\n')
-            {
-                string ret = string(_buf + _buf_ptr, idx - _buf_ptr);
-                _buf_ptr = idx + 1;
-                return ret;
-            }
-        }
-
-        // We have not found a complete line. Pack previous buffer content closer to the beginning and try to get another chunk
-        memmove(_buf, _buf + _buf_ptr, _contents_size - _buf_ptr);
-        _contents_size -= _buf_ptr;
-        _buf_ptr = 0;
-
         // Now receive next portion of data
         fd_set rfds;
         struct timeval tv{0, 0};
@@ -57,10 +48,16 @@ string HostPty::nextString()
 
         if (select(_master + 1, &rfds, NULL, NULL, &tv))
         {
-            size_t received_size = read(_master, _buf + _contents_size, BUF_SIZE - _contents_size);
-            _contents_size += received_size;
+            // Read symbols one by one until new line is found
+            size_t received_size = read(_master, buf + idx, 1);
+
+            // Stopping at new line
+            if(buf[idx] == '\n')
+                break;
+
+            idx++;
         }
     }
 
-    return "";
+    return string(buf, idx);
 }
