@@ -41,7 +41,8 @@ BOM:
 
 # Software
 
-Software is based on WiringPi library which provides a Arduino-like interface to drive RasPi's GPIOs.
+Software is based on WiringPi library which provides a Arduino-like interface to drive RasPi's GPIOs. Additionally it uses 
+[SpeedyStepper](https://github.com/Stan-Reifel/SpeedyStepper) library with minor modifications to drive stepper motor. 
 
 Installing prerequisites
 ```bash
