@@ -3,6 +3,6 @@ project (NanoDlpShield)
 
 find_library(wiringPi_LIB wiringPi)
 
-set(SOURCES test.cpp)
+set(SOURCES test.cpp HostPty.cpp)
 add_executable(NanoDlpShield ${SOURCES})
-target_link_libraries(NanoDlpShield ${wiringPi_LIB})
+target_link_libraries(NanoDlpShield ${wiringPi_LIB} util)

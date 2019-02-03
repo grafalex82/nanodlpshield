@@ -1,8 +1,18 @@
-#include <stdio.h>
-#include <wiringPi.h>
+#include <iostream>
+//#include <unistd.h>
+//#include <sys/select.h>
+//#include <sys/stat.h>
+//#include <fcntl.h>
+//#include <string.h>
+//#include <termios.h>
+//#include <stdlib.h>
+//#include <wiringPi.h>
+
+#include "HostPty.h"
 
 int main(int argc, char** argv)
 {
+#if 0
     if (wiringPiSetupGpio () == -1)
         return 1;
 
@@ -25,8 +35,16 @@ int main(int argc, char** argv)
             digitalWrite(6, 0);
             delayMicroseconds(300);
         }
-        
+
         delay(2000);
+    }
+#endif
+
+    HostPty pty("/dev/ttyNanoDLP");
+    while(1)
+    {
+        std::string str = pty.nextString();
+        std::cout << "Received line: " << str << std::endl;
     }
 
     return 0;
