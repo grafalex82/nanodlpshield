@@ -4,7 +4,7 @@ project (NanoDlpShield)
 find_library(wiringPi_LIB wiringPi)
 
 set(SOURCES
-    test.cpp 
+    NanoDLPShield.cpp 
     HostPty.cpp
     SpeedyStepper.cpp
     )
