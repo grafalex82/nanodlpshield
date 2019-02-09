@@ -11,6 +11,13 @@ const int ENABLE_PIN = 12;
 // Steps in 1mm along Z axis
 const float STEPS_PER_MM = 400*16/8; //steps per revolution * microstepping / mm per revolution
 
+// Top/Bottom end stops
+const int ZTOP_PIN = 21;
+const int ZBOT_PIN = 20;
+
+// Top/Bottom end stops pull up/down modes (see PUD_UP/PUD_DOWN/PUD_OFF values)
+const int ZTOP_PIN_PUD = 2; // PUD_UP
+const int ZBOT_PIN_PUD = 2; // PUD_UP
 
 // Enable this option if the printer has hardware up/down button.
 #define SUPPORT_UP_DOWN_BUTTONS 1

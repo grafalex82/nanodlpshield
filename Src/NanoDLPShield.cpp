@@ -1,10 +1,12 @@
 #include "HostPty.h"
 #include "SpeedyStepper.h"
+#include "MotorController.h"
 #include "Config.h"
 
 #include <wiringPi.h>
 #include <iostream>
 
+#if 0
 SpeedyStepper stepper;
 
 void setSteperLowSpeed()
@@ -82,13 +84,14 @@ void processMotorOffCmd() //M18
 {
     digitalWrite(ENABLE_PIN, HIGH);
 }
-
+#endif //0
 
 int main(int argc, char** argv)
 {
     if (wiringPiSetupGpio () == -1)
         return 1;
 
+#if 0
     stepper.connectToPins(STEP_PIN, DIR_PIN);
     stepper.setStepsPerMillimeter(STEPS_PER_MM);
     setSteperHighSpeed();
@@ -116,6 +119,12 @@ int main(int argc, char** argv)
 //        std::string str = pty.nextString();
 //        std::cout << "Received line: " << str << std::endl;
     }
+#endif//0
+
+    MotorController mc;
+    while(true)
+        delay(100);
+
 
     return 0;
 }
