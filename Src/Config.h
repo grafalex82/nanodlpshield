@@ -9,7 +9,8 @@ const int STEP_PIN = 6;
 const int ENABLE_PIN = 12;
 
 // Steps in 1mm along Z axis
-const float STEPS_PER_MM = 400*16/8; //steps per revolution * microstepping / mm per revolution
+//const float STEPS_PER_MM = 200*16/8; //steps per revolution * microstepping / mm per revolution
+const float STEPS_PER_MM = 200*16; //DEBUG: steps in one revolution
 
 // Top/Bottom end stops
 const int ZTOP_PIN = 21;

@@ -123,7 +123,10 @@ int main(int argc, char** argv)
 
     MotorController mc;
     while(true)
-        delay(100);
+    {
+        //mc.runTo(10., 10.);
+        delay(10000);
+    }
 
 
     return 0;
