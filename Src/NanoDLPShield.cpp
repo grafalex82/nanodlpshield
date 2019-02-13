@@ -7,6 +7,7 @@
 
 SpeedyStepper stepper;
 
+#if SUPPORT_UP_DOWN_BUTTONS
 void setSteperLowSpeed()
 {
     stepper.setSpeedInMillimetersPerSecond(LOW_SPEED);
@@ -72,6 +73,7 @@ void processBtnMovement(int btnPin, int direction = 1)
     while(!stepper.processMovement())
         ;
 }
+#endif //SUPPORT_UP_DOWN_BUTTONS
 
 void processMotorOnCmd() //M17
 {
@@ -91,16 +93,18 @@ int main(int argc, char** argv)
 
     stepper.connectToPins(STEP_PIN, DIR_PIN);
     stepper.setStepsPerMillimeter(STEPS_PER_MM);
-    setSteperHighSpeed();
 
+#if SUPPORT_UP_DOWN_BUTTONS
     pinMode(UP_BTN_PIN, INPUT);
     pullUpDnControl(UP_BTN_PIN, UP_BTN_PUD);
     pinMode(DOWN_BTN_PIN, INPUT);
     pullUpDnControl(DOWN_BTN_PIN, DOWN_BTN_PUD);
+#endif //SUPPORT_UP_DOWN_BUTTONS
 
-    HostPty pty("/dev/ttyNanoDLP");
+    HostPty pty("/tmp/ttyNanoDLP");
     while(1)
     {
+#if SUPPORT_UP_DOWN_BUTTONS
         if(isButtonPressed(UP_BTN_PIN))
         {
             processMotorOnCmd();
@@ -112,9 +116,10 @@ int main(int argc, char** argv)
             processMotorOnCmd();
             processBtnMovement(DOWN_BTN_PIN, -1);
         }
+#endif //SUPPORT_UP_DOWN_BUTTONS
 
-//        std::string str = pty.nextString();
-//        std::cout << "Received line: " << str << std::endl;
+        std::string str = pty.nextString();
+        std::cout << "Received line: " << str << std::endl;
     }
 
     return 0;
