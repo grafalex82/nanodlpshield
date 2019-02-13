@@ -18,16 +18,15 @@ HostPty::HostPty(const string & pty_name)
     if(res != 0)
         throw std::runtime_error("Cannot open HostPty");
 
-    // TODO: Symlink creation and usage requires root rights. Find a proper way for this
-    //unlink(pty_name.c_str());
-    //res = symlink(name, pty_name.c_str());
-    //if(res < 0)
-    //    throw std::runtime_error("Cannot create pty symlink");
+    unlink(pty_name.c_str());
+    res = symlink(name, pty_name.c_str());
+    if(res < 0)
+        throw std::runtime_error("Cannot create pty symlink");
 }
 
 HostPty::~HostPty()
 {
-    //unlink(_pty_name.c_str());
+    unlink(_pty_name.c_str());
     close(_master);
     close(_slave);
 }
