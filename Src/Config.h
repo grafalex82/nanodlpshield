@@ -38,28 +38,13 @@ const int DOWN_BTN_PUD = 1; // PUD_DOWN
 #endif //SUPPORT_UP_DOWN_BUTTONS
 
 
-#if 0
+// Enable this option if the printer has hardware LED On/Off button
+#define SUPPORT_LED_ON_BUTTON 1
+#if SUPPORT_LED_ON_BUTTON
+const int LED_ON_BTN_PIN = 13;
+const int LED_ON_BTN_PUD = 1; // PUD_DOWN
+#endif //SUPPORT_LED_ON_BUTTON
 
-#ifdef JAP_PRINTER
+// Pin number where UV LED is connected to
+const int UV_LED_PIN = 17;
 
-const int LED_ON_BTN_PIN = A2;
-
-const int UV_LED_PIN = A6;
-
-#else // Wanhao D7
-
-const int DIR_PIN = 48;
-const int STEP_PIN = 76;
-const int ENABLE_PIN = A8;
-
-const int LED_ON_BTN_PIN = 18;
-
-const int UV_LED_PIN = 9;
-#endif//
-
-
-const int CMD_TIMEOUT = 5000;
-const int BUF_LEN = 100;
-
-
-#endif //0

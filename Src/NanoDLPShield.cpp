@@ -7,6 +7,9 @@
 
 SpeedyStepper stepper;
 
+bool relativePositioning = true;
+unsigned long lastMovementMS = 0;
+
 #if SUPPORT_UP_DOWN_BUTTONS
 void setSteperLowSpeed()
 {
@@ -85,41 +88,91 @@ void processMotorOffCmd() //M18
     digitalWrite(ENABLE_PIN, HIGH);
 }
 
-
-int main(int argc, char** argv)
+void updateLastMovement()
 {
-    if (wiringPiSetupGpio () == -1)
-        return 1;
+    lastMovementMS = millis();
+}
 
+bool shouldDisableMotors()
+{
+    return millis() - lastMovementMS > 100000; // 100 seconds
+}
+
+void processLEDButon()
+{
+    digitalWrite(UV_LED_PIN, !digitalRead(UV_LED_PIN));
+    delay(50);
+    while(isButtonPressed(LED_ON_BTN_PIN))
+        ;
+}
+
+
+void setup()
+{
+    // General GPIO initialization
+    if (wiringPiSetupGpio () == -1)
+        throw std::runtime_error("Cannot initialize GPIO");
+
+    // Init stepper motor
     stepper.connectToPins(STEP_PIN, DIR_PIN);
     stepper.setStepsPerMillimeter(STEPS_PER_MM);
 
 #if SUPPORT_UP_DOWN_BUTTONS
+    // Init up/down buttons
     pinMode(UP_BTN_PIN, INPUT);
     pullUpDnControl(UP_BTN_PIN, UP_BTN_PUD);
     pinMode(DOWN_BTN_PIN, INPUT);
     pullUpDnControl(DOWN_BTN_PIN, DOWN_BTN_PUD);
 #endif //SUPPORT_UP_DOWN_BUTTONS
 
+    // Init UV LED MOSFET Pin
+    pinMode(UV_LED_PIN, OUTPUT);
+    digitalWrite(UV_LED_PIN, LOW);
+
+#if SUPPORT_LED_ON_BUTTON
+    // Init Led On/Off button
+    pinMode(LED_ON_BTN_PIN, INPUT);
+    pullUpDnControl(LED_ON_BTN_PIN, LED_ON_BTN_PUD);
+#endif //SUPPORT_LED_ON_BUTTON
+}
+
+
+int main(int argc, char** argv)
+{
+    setup();
+
     HostPty pty("/tmp/ttyNanoDLP");
     while(1)
     {
+        //checkAlive();
+
 #if SUPPORT_UP_DOWN_BUTTONS
         if(isButtonPressed(UP_BTN_PIN))
         {
             processMotorOnCmd();
             processBtnMovement(UP_BTN_PIN, 1);
+            updateLastMovement();
         }
 
         if(isButtonPressed(DOWN_BTN_PIN))
         {
             processMotorOnCmd();
             processBtnMovement(DOWN_BTN_PIN, -1);
+            updateLastMovement();
         }
 #endif //SUPPORT_UP_DOWN_BUTTONS
 
+        if(isButtonPressed(LED_ON_BTN_PIN))
+            processLEDButon();
+
+/*
         std::string str = pty.nextString();
         std::cout << "Received line: " << str << std::endl;
+        processSerialInput(str);
+
+        if(shouldDisableMotors() && !digitalRead(ENABLE_PIN))
+            processMotorOffCmd();
+*/
     }
 
     return 0;
