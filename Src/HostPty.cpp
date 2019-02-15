@@ -9,6 +9,7 @@ using namespace std;
 
 HostPty::HostPty(const string & pty_name)
     : _pty_name(pty_name)
+    , _bufPos(0)
 {
     char name[100] = {0};
     int res = openpty(&_master, &_slave, name, NULL, NULL);
@@ -31,32 +32,30 @@ HostPty::~HostPty()
     close(_slave);
 }
 
-string HostPty::nextString()
+bool HostPty::receiveNextString(string & outStr)
 {
-    static const int BUF_SIZE = 4096;
-    char buf[BUF_SIZE];
-    size_t idx = 0;
+    // Now receive next portion of data
+    struct timeval tv{0, 1000};
 
-    while(true)
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(_master, &rfds);
+
+    if (select(_master + 1, &rfds, NULL, NULL, &tv))
     {
-        // Now receive next portion of data
-        fd_set rfds;
-        struct timeval tv{0, 0};
-        FD_ZERO(&rfds);
-        FD_SET(_master, &rfds);
+        // Read symbols one by one until new line is found
+        size_t received_size = read(_master, _buf + _bufPos, 1);
 
-        if (select(_master + 1, &rfds, NULL, NULL, &tv))
+        // Stopping at new line
+        if(_buf[_bufPos] == '\n')
         {
-            // Read symbols one by one until new line is found
-            size_t received_size = read(_master, buf + idx, 1);
-
-            // Stopping at new line
-            if(buf[idx] == '\n')
-                break;
-
-            idx++;
+            outStr = string(_buf, _bufPos);
+            _bufPos = 0;
+            return true;
         }
+
+        _bufPos++;
     }
 
-    return string(buf, idx);
+    return false;
 }

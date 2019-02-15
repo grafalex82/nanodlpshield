@@ -19,7 +19,7 @@ void setSteperLowSpeed()
 
 void setSteperHighSpeed()
 {
-    stepper.setSpeedInMillimetersPerSecond(HIGH_SPEED);
+    stepper.setSpeedInMillimetersPerSecond(HIGH_SPEED); 
     stepper.setAccelerationInMillimetersPerSecondPerSecond(HIGH_ACCELERATION);
 }
 
@@ -164,6 +164,10 @@ int main(int argc, char** argv)
 
         if(isButtonPressed(LED_ON_BTN_PIN))
             processLEDButon();
+
+        std::string str;
+        if(pty.receiveNextString(str))
+            std::cout << "Received line: " << str << std::endl;
 
 /*
         std::string str = pty.nextString();

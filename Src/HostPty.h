@@ -9,9 +9,13 @@ class HostPty
     int _slave;
     std::string _pty_name;
 
+    static const int BUF_SIZE = 4096;
+    char _buf[BUF_SIZE];
+    size_t _bufPos;
+
 public:
     HostPty(const std::string & pty_name);
     ~HostPty();
 
-    std::string nextString();
+    bool receiveNextString(std::string & outStr);
 };
