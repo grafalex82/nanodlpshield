@@ -48,3 +48,5 @@ const int LED_ON_BTN_PUD = 1; // PUD_DOWN
 // Pin number where UV LED is connected to
 const int UV_LED_PIN = 17;
 
+// Signaling LED pin
+const int LED_PIN = 16;

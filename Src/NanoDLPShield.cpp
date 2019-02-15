@@ -4,6 +4,9 @@
 
 #include <wiringPi.h>
 #include <iostream>
+#include <cstring>
+
+using namespace std;
 
 SpeedyStepper stepper;
 
@@ -78,16 +81,6 @@ void processBtnMovement(int btnPin, int direction = 1)
 }
 #endif //SUPPORT_UP_DOWN_BUTTONS
 
-void processMotorOnCmd() //M17
-{
-    digitalWrite(ENABLE_PIN, LOW);
-}
-
-void processMotorOffCmd() //M18
-{
-    digitalWrite(ENABLE_PIN, HIGH);
-}
-
 void updateLastMovement()
 {
     lastMovementMS = millis();
@@ -98,6 +91,27 @@ bool shouldDisableMotors()
     return millis() - lastMovementMS > 100000; // 100 seconds
 }
 
+void processMotorOnCmd() //M17
+{
+    updateLastMovement();
+    digitalWrite(ENABLE_PIN, LOW);
+}
+
+void processMotorOffCmd() //M18
+{
+    digitalWrite(ENABLE_PIN, HIGH);
+}
+
+void processLEDOnCmd() // M3 or M106
+{
+    digitalWrite(UV_LED_PIN, HIGH);
+}
+
+void processLEDOffCmd() // M5 or M107
+{
+    digitalWrite(UV_LED_PIN, LOW);
+}
+
 void processLEDButon()
 {
     digitalWrite(UV_LED_PIN, !digitalRead(UV_LED_PIN));
@@ -105,7 +119,6 @@ void processLEDButon()
     while(isButtonPressed(LED_ON_BTN_PIN))
         ;
 }
-
 
 void setup()
 {
@@ -116,6 +129,8 @@ void setup()
     // Init stepper motor
     stepper.connectToPins(STEP_PIN, DIR_PIN);
     stepper.setStepsPerMillimeter(STEPS_PER_MM);
+    pinMode(ENABLE_PIN, OUTPUT);
+    processMotorOffCmd();
 
 #if SUPPORT_UP_DOWN_BUTTONS
     // Init up/down buttons
@@ -134,8 +149,152 @@ void setup()
     pinMode(LED_ON_BTN_PIN, INPUT);
     pullUpDnControl(LED_ON_BTN_PIN, LED_ON_BTN_PUD);
 #endif //SUPPORT_LED_ON_BUTTON
+
+    // Signaling (general purpose) LED
+    pinMode(LED_PIN, OUTPUT);
 }
 
+int parseInt(const char * buf, char prefix, int value)
+{
+    const char * ptr = buf;
+
+    while(ptr && *ptr)
+    {
+        if(*ptr == prefix)
+            return atoi(ptr + 1);
+
+        ptr = strchr(ptr, ' ');
+        if(ptr == NULL)
+            break;
+
+        ptr++;
+    }
+    return value;
+}
+
+float parseFloat(const char * buf, char prefix, float value)
+{
+    const char * ptr = buf;
+
+    while(ptr && *ptr)
+    {
+        if(*ptr == prefix)
+            return atof(ptr + 1);
+
+        ptr = strchr(ptr, ' ');
+        if(ptr == NULL)
+            break;
+
+        ptr++;
+    }
+    return value;
+}
+
+void processMoveCmd(float position, float speed)
+{
+    if(speed != 0)
+        stepper.setSpeedInMillimetersPerSecond(speed / 60);
+
+    if(relativePositioning)
+        stepper.moveRelativeInMillimeters(position);
+    else
+        stepper.moveToPositionInMillimeters(position);
+}
+
+void processPauseCmd(int duration)
+{
+    delay(duration);
+}
+
+bool parseGCommand(const char * cmd)
+{
+    int cmdID = parseInt(cmd, 'G', 0);
+    switch(cmdID)
+    {
+        case 1: // G1 Move
+        {
+            float len = parseFloat(cmd, 'Z', 0);
+            float speed = parseFloat(cmd, 'F', 0);
+            processMotorOnCmd();
+            processMoveCmd(len, speed);
+            updateLastMovement();
+
+            // NanoDLP waits for a confirmation that movement was completed
+            //Serial.write("Z_move_comp\n");
+            cout << "Z_move_comp" << endl;
+            return true;
+        }
+        case 4: // G4 Pause
+        {
+            int duration = parseInt(cmd, 'P', 0);
+            processPauseCmd(duration);
+            return true;
+        }
+
+        case 90: // G90 - Set Absolute Positioning
+            relativePositioning = false;
+            return true;
+
+        case 91: // G91 - Set Relative Positioning
+            relativePositioning = true;
+            return true;
+
+    }
+
+    return false;
+}
+
+bool parseMCommand(const char * cmd)
+{
+    int cmdID = parseInt(cmd, 'M', 0);
+    switch(cmdID)
+    {
+    case 3: // M3/M106 - UV LED On
+    case 106: 
+        processLEDOnCmd();
+        return true;
+
+    case 5: // M5/M107 - UV LED Off
+    case 107:
+        processLEDOffCmd();
+        return true;
+
+    case 17: // M17 - Motor on
+        processMotorOnCmd();
+        return true;
+
+    case 18: // M18 - Motor off
+        processMotorOffCmd();
+        return true;
+
+    case 114: // M114 - Get current position
+        float pos = stepper.getCurrentPositionInMillimeters();
+        // Serial.print("Z:");
+        // Serial.print(pos, 2);
+        // Serial.write('\n');
+        cout << "Z: " << pos << endl;
+        return true;
+    }
+
+    return false;
+}
+
+bool parseCommand(const char * cmd)
+{
+    switch(*cmd)
+    {
+    case 'G':
+        return parseGCommand(cmd);
+
+    case 'M':
+        return parseMCommand(cmd);
+
+    default:
+        break;
+    }
+
+    return false;
+}
 
 int main(int argc, char** argv)
 {
@@ -165,18 +324,27 @@ int main(int argc, char** argv)
         if(isButtonPressed(LED_ON_BTN_PIN))
             processLEDButon();
 
-        std::string str;
-        if(pty.receiveNextString(str))
-            std::cout << "Received line: " << str << std::endl;
+        string cmd;
+        if(pty.receiveNextString(cmd))
+        {
+            cout << "Received line: " << cmd << endl;
 
-/*
-        std::string str = pty.nextString();
-        std::cout << "Received line: " << str << std::endl;
-        processSerialInput(str);
+            if(parseCommand(cmd.c_str()))
+            {
+                //Serial.write("ok\n");
+                cout << "ok" << endl;
+            }
+            else
+            {
+                // Serial.print("Invalid or unsupported command: ");
+                // Serial.print(cmdBuf);
+                // Serial.write('\n');
+                cout << "Invalid or unsupported command: " << cmd << endl;
+            }
+        }
 
         if(shouldDisableMotors() && !digitalRead(ENABLE_PIN))
             processMotorOffCmd();
-*/
     }
 
     return 0;
