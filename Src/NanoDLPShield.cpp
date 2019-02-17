@@ -152,6 +152,10 @@ void setup()
 
     // Signaling (general purpose) LED
     pinMode(LED_PIN, OUTPUT);
+    
+    // FAN
+    pinMode(FAN_PIN, OUTPUT);
+    digitalWrite(FAN_PIN, 1);
 }
 
 int parseInt(const char * buf, char prefix, int value)

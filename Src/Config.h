@@ -50,3 +50,6 @@ const int UV_LED_PIN = 17;
 
 // Signaling LED pin
 const int LED_PIN = 16;
+
+// FAN pin
+const int FAN_PIN = 18;
