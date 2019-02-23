@@ -10,6 +10,8 @@ const int ENABLE_PIN = 12;
 
 // Steps in 1mm along Z axis
 const float STEPS_PER_MM = 400*16/8; //steps per revolution * microstepping / mm per revolution
+const float DEFAULT_SPEED = 6; // mm/s
+const float DEFAULT_ACCELERATION = 20; // mm/s2
 
 
 // Enable this option if the printer has hardware up/down button.
@@ -32,8 +34,8 @@ const int UP_BTN_PIN = 26;
 const int DOWN_BTN_PIN = 19;
 
 // Pull up/down modes for up/down buttons (see PUD_UP/PUD_DOWN/PUD_OFF values)
-const int UP_BTN_PUD = 1; // PUD_DOWN
-const int DOWN_BTN_PUD = 1; // PUD_DOWN
+const int UP_BTN_PUD = 2; // PUD_UP
+const int DOWN_BTN_PUD = 2; // PUD_UP
 
 #endif //SUPPORT_UP_DOWN_BUTTONS
 
@@ -42,7 +44,7 @@ const int DOWN_BTN_PUD = 1; // PUD_DOWN
 #define SUPPORT_LED_ON_BUTTON 1
 #if SUPPORT_LED_ON_BUTTON
 const int LED_ON_BTN_PIN = 13;
-const int LED_ON_BTN_PUD = 1; // PUD_DOWN
+const int LED_ON_BTN_PUD = 2; // PUD_UP
 #endif //SUPPORT_LED_ON_BUTTON
 
 // Pin number where UV LED is connected to
