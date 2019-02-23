@@ -5,6 +5,8 @@
 #include <wiringPi.h>
 #include <iostream>
 #include <cstring>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -12,6 +14,15 @@ SpeedyStepper stepper;
 
 bool relativePositioning = true;
 unsigned long lastMovementMS = 0;
+
+HostPty pty("/tmp/ttyNanoDLP");
+
+void ptyWrite(const string & str)
+{
+    pty.write(str);
+    cout << str << endl;
+}
+
 
 #if SUPPORT_UP_DOWN_BUTTONS
 void setSteperLowSpeed()
@@ -28,7 +39,7 @@ void setSteperHighSpeed()
 
 bool isButtonPressed(int btnPin)
 {
-    return digitalRead(btnPin) == HIGH;
+    return digitalRead(btnPin) == LOW;
 }
 
 void processBtnMovement(int btnPin, int direction = 1)
@@ -129,6 +140,8 @@ void setup()
     // Init stepper motor
     stepper.connectToPins(STEP_PIN, DIR_PIN);
     stepper.setStepsPerMillimeter(STEPS_PER_MM);
+    stepper.setSpeedInMillimetersPerSecond(DEFAULT_SPEED);
+    stepper.setAccelerationInMillimetersPerSecondPerSecond(DEFAULT_ACCELERATION);
     pinMode(ENABLE_PIN, OUTPUT);
     processMotorOffCmd();
 
@@ -224,8 +237,7 @@ bool parseGCommand(const char * cmd)
             updateLastMovement();
 
             // NanoDLP waits for a confirmation that movement was completed
-            //Serial.write("Z_move_comp\n");
-            cout << "Z_move_comp" << endl;
+            ptyWrite("Z_move_comp");
             return true;
         }
         case 4: // G4 Pause
@@ -272,12 +284,13 @@ bool parseMCommand(const char * cmd)
         return true;
 
     case 114: // M114 - Get current position
+    {
         float pos = stepper.getCurrentPositionInMillimeters();
-        // Serial.print("Z:");
-        // Serial.print(pos, 2);
-        // Serial.write('\n');
-        cout << "Z: " << pos << endl;
+        stringstream s;
+        s << "Z:" << std::setprecision(2) << pos;
+        ptyWrite(s.str());
         return true;
+    }
     }
 
     return false;
@@ -304,7 +317,6 @@ int main(int argc, char** argv)
 {
     setup();
 
-    HostPty pty("/tmp/ttyNanoDLP");
     while(1)
     {
         //checkAlive();
@@ -335,15 +347,13 @@ int main(int argc, char** argv)
 
             if(parseCommand(cmd.c_str()))
             {
-                //Serial.write("ok\n");
-                cout << "ok" << endl;
+                ptyWrite("ok");
             }
             else
             {
-                // Serial.print("Invalid or unsupported command: ");
-                // Serial.print(cmdBuf);
-                // Serial.write('\n');
-                cout << "Invalid or unsupported command: " << cmd << endl;
+                string s("Invalid or unsupported command: ");
+                s += cmd;
+                ptyWrite(s);
             }
         }
 

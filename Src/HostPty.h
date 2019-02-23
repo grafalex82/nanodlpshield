@@ -18,4 +18,5 @@ public:
     ~HostPty();
 
     bool receiveNextString(std::string & outStr);
+    void write(const std::string & str);
 };
